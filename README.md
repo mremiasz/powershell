@@ -1,10 +1,10 @@
-#Powershell oraz active directory
+## Powershell oraz active directory
 
-Skrypt do tworzenia urzytkownikow z pliku txt w active directory:
+#Skrypt do tworzenia urzytkownikow z pliku txt w active directory:
 plik users.txt to:
 Tomasz Nowak
 Anna Kowalska
-
+```powershell
 $file = get-content .\users.txt
 $file | % { 
  $pass = -join((65..90) + (97..122) | Get-Random -Count 8 | %{[char]$_}) +"2#"
@@ -12,3 +12,4 @@ $file | % {
  Write-Host $login $pass
  New-ADUser $login -AccountPassword (ConvertTo-SecureString $pass -AsPlainText -Force)
 }
+```
