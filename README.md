@@ -2,8 +2,11 @@
 
 #Skrypt do tworzenia urzytkownikow z pliku txt w active directory:
 plik users.txt to:
-Tomasz Nowak
-Anna Kowalska
+```
+ Tomasz Nowak
+ Anna Kowalska
+```
+
 ```powershell
 $file = get-content .\users.txt
 $file | % { 
