@@ -1,5 +1,5 @@
 # Powershell oraz active directory
-
+**Do zrobienia i dodania są zadania z drugiej części**
 ### Skrypt do tworzenia urzytkownikow z pliku txt w active directory:
 plik users.txt to:
 ```
