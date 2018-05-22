@@ -128,3 +128,35 @@ $oIE = new-object -com internetexplorer.application
 $oIE.navigate2("http://blogs.msdn.com/powershell/rss.aspx")
 $oIE.visible = $true
 ```
+### Druga część zaliczenia
+1) Zmien nazwe komputera z maszyny wirtualnej Windows.2008.001, na AD-001
+2) Na komputerze AD-001
+	a) wyłącz pierwszy (Local Area Connection) interfejs sieciowy 
+	b) dla drugiego interfejsu sieciowego (Local Area Connection 2) wyłącz protokół IPv6, oraz ustaw 
+		adres statyczny ip4 na 192.168.20.2
+		maska sieciowa na 255.255.255.0
+		brama 192.168.20.2
+		adres DNS na 1192.168.20.2
+3) Zainstaluj AD oraz DNS na komputerze AD-001 w domenie winadm.local w trybie zgodności Windows 2008 R2.
+	- skonfiguruj odpowiednio Forward Zone i Reversed Zone
+4) Zmien nazwe komputera z maszyny wirtualnej Windows.2008.002, na Win-002
+	a) wyłącz pierwszy (Local Area Connection) interfejs sieciowy 
+	b) dla drugiego interfejsu sieciowego (Local Area Connection 2) wyłącz protokół IPv6, oraz ustaw 
+		adres statyczny ip4 na 192.168.20.10
+		maskę sieciową na 255.255.255.0
+		brama 192.168.20.2
+		adres DNS na 192.168.20.2
+5) Podłącz komputer Win-002 do doemny 
+6) Utwórz użytkownika Domenowego
+	a) Jan Kowalski z loginem kowalski zmiasta Warszawa
+	b) Tomek Nowak z działu poczta
+7) Powershell,
+	- Zmień hasło użytkownika Kowalski
+	- Wymuś zmianę hasła użytkownika kowalski przy następnym logowaniu
+	- Wyświetl wszytkich użytkowników z miasta Warszawa
+	- Zablokuj konto użytkownika z Warszawy
+	- Wyświetl członków danej grupy (rekurencyjnie) 
+	- Wyświetl informację o ostatnim logowaniu na danym komputerze,
+	- Wyświetl informację o systemach operacyjnych na komputerach w domenie
+8) Zmień GPO, tak aby przy logowaniu użytkownik nie widział opcji RUN w start menu
+9) Znajdź wersję instalacyjną msi programu firefox i utwórz politykę zmuszającą do zainstalowania tego oprogramownia w czasie startu systemu na komputerach w domenie. 
