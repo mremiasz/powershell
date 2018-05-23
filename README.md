@@ -148,8 +148,8 @@ $oIE.visible = $true
 		- adres DNS na 192.168.20.2
 5) Podłącz komputer Win-002 do doemny 
 6) Utwórz użytkownika Domenowego
-	a) Jan Kowalski z loginem kowalski zmiasta Warszawa
-	b) Tomek Nowak z działu poczta
+	- Jan Kowalski z loginem kowalski z miasta Warszawa
+	- Tomek Nowak z działu poczta
 7) Powershell:
 	- Zmień hasło użytkownika Kowalski
 	- Wymuś zmianę hasła użytkownika kowalski przy następnym logowaniu
