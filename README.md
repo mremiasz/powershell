@@ -130,14 +130,66 @@ $oIE.visible = $true
 ```
 ### Druga część zaliczenia
 1) Zmien nazwe komputera z maszyny wirtualnej Windows.2008.001, na AD-001
+
+Type:
+```
+shutdown -r -t 0
+```
+to reboot the server.
+
+http://www.dell.com/support/article/pl/pl/pldhs1/how10252/changing-the-windows-computer-name?lang=en
+
+https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.management/rename-computer?view=powershell-6
+
+Komputer lokalny:
+```
+PS C:\> Rename-Computer -NewName "Server044" -DomainCredential Domain01\Admin01 -Restart
+```
+Komputer zdalny:
+```
+PS C:\> Rename-Computer -ComputerName "Srv01" -NewName "Server001" -LocalCredential Srv01\Admin01 -DomainCredential Domain01\Admin01 -Force -PassThru -Restart
+```
 2) Na komputerze AD-001:
-	- wyłącz pierwszy (Local Area Connection) interfejs sieciowy 
+		- wyłącz pierwszy (Local Area Connection) interfejs sieciowy 
+		```
+		Get-NetAdapter
+		lub	
+		Disable-NetAdapter -Name "Ethernet 2" -Confirm:$false
+		```
+	
 	- dla drugiego interfejsu sieciowego (Local Area Connection) wyłącz protokół IPv6, oraz ustaw: 
+		```
+		Get-NetAdapterBinding -ComponentID ms_tcpip6
+		Enable-NetAdapterBinding -Name "Adapter Name" -ComponentID ms_tcpip6
+		```
+		
 		- adres statyczny ip4 na 192.168.20.2
+		
+		```
+		https://docs.microsoft.com/en-us/powershell/module/nettcpip/set-netipaddress?view=win10-ps
+		
+		http://www.freenode-windows.org/resources/all-windows-versions/configuring-ipv6
+		```
 		- maska sieciowa na 255.255.255.0
 		- brama 192.168.20.2
+		```
+		New-NetIPAddress -InterfaceIndex 12 -IPAddress 192.168.0.1 -PrefixLength 24 -DefaultGateway 192.168.0.5
+		```
+		
+		the PrefixLength of 24 equals a subnet mask of 255.255.255.0
+		
+		```
+		https://gist.github.com/munim/794bc70b24dd2288adb65789279ac194
+		```
+		Kalkulator: https://mxtoolbox.com/subnetcalculator.aspx
+		
 		- adres DNS na 192.168.20.2
+		
+		https://docs.microsoft.com/en-us/powershell/module/dnsclient/set-dnsclientserveraddress?view=win10-ps
 3) Zainstaluj AD oraz DNS na komputerze AD-001 w domenie winadm.local w trybie zgodności Windows 2008 R2.
+
+	https://blogs.technet.microsoft.com/uktechnet/2016/06/08/setting-up-active-directory-via-powershell/
+
 	- skonfiguruj odpowiednio Forward Zone i Reversed Zone
 4) Zmien nazwe komputera z maszyny wirtualnej Windows.2008.002, na Win-002
 	- wyłącz pierwszy (Local Area Connection) interfejs sieciowy 
@@ -146,10 +198,14 @@ $oIE.visible = $true
 		- maskę sieciową na 255.255.255.0
 		- brama 192.168.20.2
 		- adres DNS na 192.168.20.2
-5) Podłącz komputer Win-002 do doemny 
+5) Podłącz komputer Win-002 do domeny
+	https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.management/add-computer?view=powershell-5.1
+	https://community.spiceworks.com/scripts/show/1540-join-computer-to-domain-with-powershell-one-click-method
 6) Utwórz użytkownika Domenowego
 	- Jan Kowalski z loginem kowalski z miasta Warszawa
 	- Tomek Nowak z działu poczta
+	
+	http://techgenix.com/creating-active-directory-accounts-using-powershell/
 7) Powershell:
 	- Zmień hasło użytkownika Kowalski
 	- Wymuś zmianę hasła użytkownika kowalski przy następnym logowaniu
