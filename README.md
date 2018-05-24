@@ -206,6 +206,8 @@ PS C:\> Rename-Computer -ComputerName "Srv01" -NewName "Server001" -LocalCredent
 	- Tomek Nowak z działu poczta
 	
 	http://techgenix.com/creating-active-directory-accounts-using-powershell/
+	
+	https://redmondmag.com/articles/2016/08/09/create-an-active-directory-account-in-powershell.aspx
 7) Powershell:
 	- Zmień hasło użytkownika Kowalski
 	- Wymuś zmianę hasła użytkownika kowalski przy następnym logowaniu
