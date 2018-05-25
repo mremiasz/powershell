@@ -151,6 +151,7 @@ PS C:\> Rename-Computer -ComputerName "Srv01" -NewName "Server001" -LocalCredent
 ```
 2) Na komputerze AD-001:
 		- wyłącz pierwszy (Local Area Connection) interfejs sieciowy 
+		
 		```
 		Get-NetAdapter
 		lub	
