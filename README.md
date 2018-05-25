@@ -129,21 +129,24 @@ $oIE.navigate2("http://blogs.msdn.com/powershell/rss.aspx")
 $oIE.visible = $true
 ```
 ### Druga część zaliczenia
+
+````
+Set-ExecutionPolicy -ExecutionPolicy Unrestricted
+```
+DCPROMO jest narzędziem do promowania serwera do kontrolera domeny, czyli zrobić serwer, który nie jest kontrolerem domeny:
+```
+dcpromo
+import-module activedirectory
+```
+
 1) Zmien nazwe komputera z maszyny wirtualnej Windows.2008.001, na AD-001
-
-Type:
-```
-shutdown -r -t 0
-```
-to reboot the server.
-
-http://www.dell.com/support/article/pl/pl/pldhs1/how10252/changing-the-windows-computer-name?lang=en
-
-https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.management/rename-computer?view=powershell-6
 
 Komputer lokalny:
 ```
-PS C:\> Rename-Computer -NewName "Server044" -DomainCredential Domain01\Admin01 -Restart
+$compName = Get-WmiObject Win32_ComputerSystem
+$compName.Rename("AD-001")
+RESTART-COMPUTER -force
+Rename-Computer -NewName "ad-002" -DomainCredential rem.dom.pl\Administrator -Restart
 ```
 Komputer zdalny:
 ```
@@ -153,9 +156,9 @@ PS C:\> Rename-Computer -ComputerName "Srv01" -NewName "Server001" -LocalCredent
 	- wyłącz pierwszy (Local Area Connection) interfejs sieciowy 
 		
 		```
-		Get-NetAdapter
-		lub	
-		Disable-NetAdapter -Name "Ethernet 2" -Confirm:$false
+		Get-NetAdapter [This cmdlet is part of the NetAdapter module that comes with Windows 8/Server 2012 and later.]
+		$wmi = Get-WmiObject -Class Win32_NetworkAdapter -filter "Name LIKE '%Network%'"
+		$wmi.disable()
 		```
 	
 	- dla drugiego interfejsu sieciowego (Local Area Connection) wyłącz protokół IPv6, oraz ustaw: 
