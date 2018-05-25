@@ -130,9 +130,10 @@ $oIE.visible = $true
 ```
 ### Druga część zaliczenia
 
-````
+```
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 ```
+
 DCPROMO jest narzędziem do promowania serwera do kontrolera domeny, czyli zrobić serwer, który nie jest kontrolerem domeny:
 ```
 dcpromo
@@ -157,30 +158,31 @@ PS C:\> Rename-Computer -ComputerName "Srv01" -NewName "Server001" -LocalCredent
 		
 		```
 		Get-NetAdapter [This cmdlet is part of the NetAdapter module that comes with Windows 8/Server 2012 and later.]
-		$wmi = Get-WmiObject -Class Win32_NetworkAdapter -filter "Name LIKE '%Network%'"
-		$wmi.disable()
+		$1stLAC = Get-WmiObject -Class Win32_NetworkAdapter -filter "Name LIKE '%Network Connection'"
+		$1stLAC.disable()
+		# $1stLAC.enable() - aby włączyć
 		```
 	
 	- dla drugiego interfejsu sieciowego (Local Area Connection) wyłącz protokół IPv6, oraz ustaw: 
+	
 		```
+		$2ndLAC = Get-WmiObject -Class Win32_NetworkAdapter -filter "Name LIKE '%Network Connection #2'"
 		Get-NetAdapterBinding -ComponentID ms_tcpip6
-		Enable-NetAdapterBinding -Name "Adapter Name" -ComponentID ms_tcpip6
+		Enable-NetAdapterBinding -Name "Network Connection #2" -ComponentID ms_tcpip6
 		```
 		
 		- adres statyczny ip4 na 192.168.20.2
-		
+		- maska sieciowa na 255.255.255.0
 		```
+		$2ndLAC.EnableStatic("192.168.20.2", "255.255.255.0")
 		https://docs.microsoft.com/en-us/powershell/module/nettcpip/set-netipaddress?view=win10-ps
-		
 		http://www.freenode-windows.org/resources/all-windows-versions/configuring-ipv6
 		```
-		- maska sieciowa na 255.255.255.0
+		
 		- brama 192.168.20.2
 		```
-		New-NetIPAddress -InterfaceIndex 12 -IPAddress 192.168.0.1 -PrefixLength 24 -DefaultGateway 192.168.0.5
+		$2ndLAC.SetGateways("192.168.20.1")
 		```
-		
-		the PrefixLength of 24 equals a subnet mask of 255.255.255.0
 		
 		```
 		https://gist.github.com/munim/794bc70b24dd2288adb65789279ac194
@@ -188,13 +190,22 @@ PS C:\> Rename-Computer -ComputerName "Srv01" -NewName "Server001" -LocalCredent
 		Kalkulator: https://mxtoolbox.com/subnetcalculator.aspx
 		
 		- adres DNS na 192.168.20.2
+		```
+		$DNSServers = "192.168.20.2","198.168.20.4"
+		$2ndLAC.SetDNSServerSearchOrder($DNSServers)
+		```
 		
 		https://docs.microsoft.com/en-us/powershell/module/dnsclient/set-dnsclientserveraddress?view=win10-ps
 3) Zainstaluj AD oraz DNS na komputerze AD-001 w domenie winadm.local w trybie zgodności Windows 2008 R2.
+	```
+	dcpromo
+	import-module activedirectory
+	```
 
 	https://blogs.technet.microsoft.com/uktechnet/2016/06/08/setting-up-active-directory-via-powershell/
 
 	- skonfiguruj odpowiednio Forward Zone i Reversed Zone
+	
 4) Zmien nazwe komputera z maszyny wirtualnej Windows.2008.002, na Win-002
 	- wyłącz pierwszy (Local Area Connection) interfejs sieciowy 
 	- dla drugiego interfejsu sieciowego (Local Area Connection 2) wyłącz protokół IPv6, oraz ustaw :
