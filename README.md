@@ -150,7 +150,7 @@ Komputer zdalny:
 PS C:\> Rename-Computer -ComputerName "Srv01" -NewName "Server001" -LocalCredential Srv01\Admin01 -DomainCredential Domain01\Admin01 -Force -PassThru -Restart
 ```
 2) Na komputerze AD-001:
-		- wyłącz pierwszy (Local Area Connection) interfejs sieciowy 
+	- wyłącz pierwszy (Local Area Connection) interfejs sieciowy 
 		
 		```
 		Get-NetAdapter
