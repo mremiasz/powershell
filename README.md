@@ -207,70 +207,93 @@ Rename-Computer -ComputerName "Srv01" -NewName "Server001" -LocalCredential Srv0
 	- skonfiguruj odpowiednio Forward Zone i Reversed Zone
 	
 4) Zmien nazwe komputera z maszyny wirtualnej Windows.2008.002, na Win-002
-	```
-		$compName = Get-WmiObject Win32_ComputerSystem
-		$compName.Rename("Win-002")
-		RESTART-COMPUTER -force
+	```powershell
+	$compName = Get-WmiObject Win32_ComputerSystem
+	$compName.Rename("Win-002")
+	RESTART-COMPUTER -force
 	```
 
 	- wyłącz pierwszy (Local Area Connection) interfejs sieciowy 
-	```
-		$1stLAC = Get-WmiObject -Class Win32_NetworkAdapter -filter "Name LIKE '%Network Connection'"
-		$1stLAC.disable()
+	```powershell
+	$1stLAC = Get-WmiObject -Class Win32_NetworkAdapter -filter "Name LIKE '%Network Connection'"
+	$1stLAC.disable()
 	```
 	
 	- dla drugiego interfejsu sieciowego (Local Area Connection 2) wyłącz protokół IPv6, oraz ustaw :
-	```
-		$2ndLAC = Get-WMIObject Win32_NetworkAdapterConfiguration | where{$_.IPEnabled -eq "TRUE"}
-	```
 		- adres statyczny ip4 na 192.168.20.10
 		- maskę sieciową na 255.255.255.0
 		- brama 192.168.20.2
 		- adres DNS na 192.168.20.2
-		```
-			$2ndLAC.EnableStatic("192.168.20.10", "255.255.255.0")
-			$2ndLAC.SetGateways("192.168.20.2")
-			$2ndLAC.SetDNSServerSearchOrder("192.168.20.2")
+		```powershell
+		$2ndLAC = Get-WMIObject Win32_NetworkAdapterConfiguration | where{$_.IPEnabled -eq "TRUE"}
+		$2ndLAC.EnableStatic("192.168.20.10", "255.255.255.0")
+		$2ndLAC.SetGateways("192.168.20.2")
+		$2ndLAC.SetDNSServerSearchOrder("192.168.20.2")
 		```
 5) Podłącz komputer Win-002 do domeny
-	```
-		Add-Computer -DomainName "winadm.local"
+	```powershell
+	Add-Computer -DomainName "winadm.local"
 	```
 	
 6) Utwórz użytkownika Domenowego
 	- Jan Kowalski z loginem kowalski z miasta Warszawa
 	- Tomek Nowak z działu poczta
-	```
- 		$pass = -join((65..90) + (97..122) | Get-Random -Count 8 | %{[char]$_}) +"2#"
-		$pass = zVSneits2#
- 		$GivenName = "Jan"
-		$name = “kowalski”
-		$city = "Warszawa"
-		$surn = "Kowalski"
- 		New-ADUser -GivenName $GivenName -name $name -City $city -Surname $surn -AccountPassword (ConvertTo-SecureString $pass -AsPlainText -Force)
-		$name = “tnowak”
-		$dep = "poczta"
-		$GivenName = "Tomek"
-		$surn = "Nowak"
-		$city = "Łódź"
-		New-ADUser -GivenName $GivenName -Name $name -City $city -Surname $surn -Department $dep -AccountPassword (ConvertTo-SecureString $pass -AsPlainText -Force)
-		
-		#Remove-ADUser -Identity tnowak
-		Get-ADUser -Filter * | Select-Object name, surname, city, Department,GivenName
-		
+	
+	```powershell
+ 	#$pass = -join((65..90) + (97..122) | Get-Random -Count 8 | %{[char]$_}) +"2#"
+	$pass = zVSneits2#
+ 	$GivenName = "Jan"
+	$name = “kowalski”
+	$city = "Warszawa"
+	$surn = "Kowalski"
+ 	New-ADUser -GivenName $GivenName -name $name -City $city -Surname $surn -AccountPassword (ConvertTo-SecureString $pass -AsPlainText -Force)
+	
+	$name = “tnowak”
+	$dep = "poczta"
+	$GivenName = "Tomek"
+	$surn = "Nowak"
+	$city = "Łódź"
+	New-ADUser -GivenName $GivenName -Name $name -City $city -Surname $surn -Department $dep -AccountPassword (ConvertTo-SecureString $pass -AsPlainText -Force)
+	
+	#Remove-ADUser -Identity tnowak
+	Get-ADUser -Filter * | Select-Object name, surname, city, Department,GivenName
 	```
 
 7) Powershell:
 	- Zmień hasło użytkownika Kowalski
-	```	
-		Set-AdAccountPassword -Identity kowalski -Reset -NewPassword (ConvertTo-SecureString -AsPlainText "BNcPakYF49#" -Force)
+	```powershell
+	Set-AdAccountPassword -Identity kowalski -Reset -NewPassword (ConvertTo-SecureString -AsPlainText "BNcPakYF49#" -Force)
 	```
 	
 	- Wymuś zmianę hasła użytkownika kowalski przy następnym logowaniu
+	```powershell
+	Set-ADUser -Identity kowalski -ChangePasswordAtLogon $true
+	```
+	
 	- Wyświetl wszytkich użytkowników z miasta Warszawa
+	```powershell
+	Get-ADUser -Filter 'city -like "*Warszawa*"'
+	```
+	
 	- Zablokuj konto użytkownika z Warszawy
+	```powershell
+	Get-ADUser -Filter 'city -like "*Warszawa*"'| Disable-ADAccount
+	```
 	- Wyświetl członków danej grupy (rekurencyjnie) 
-	- Wyświetl informację o ostatnim logowaniu na danym komputerze,
+	```powershell
+	Get-ADGroupMember -Identity Administrators
+	Get-ADGroupMember Users | ?{$_.ObjectClass -eq "Group"} | %{Write-Host $_.Name;Get-ADGroupMember $_ | ft name -HideTableHeaders}
+	```
+	- Wyświetl informację o ostatnim logowaniu na danym komputerze
+	```powershell
+	Get-ADUser -Filter * -Properties * | 
+	Select-Object -Property Name, @{Name="Total failed logons";Expression="msDS-FailedInteractiveLogonCount"}, 
+	@{Name="Recent failed logons";Expression="msDS-FailedInteractiveLogonCountAtLastSuccessfulLogon"}, 
+	@{"Name"="Last failed logon";Expression={[datetime]::FromFileTime($_.'msDS-LastFailedInteractiveLogonTime')}}, 
+	@{"Name"="Last successful logon";Expression={[datetime]::FromFileTime($_.'msDS-LastSuccessfulInteractiveLogonTime')}} | 
+	Sort-Object Name | Format-Table
+	```
+	
 	- Wyświetl informację o systemach operacyjnych na komputerach w domenie
 8) Zmień GPO, tak aby przy logowaniu użytkownik nie widział opcji RUN w start menu
 9) Znajdź wersję instalacyjną msi programu firefox i utwórz politykę zmuszającą do zainstalowania tego oprogramownia w czasie startu systemu na komputerach w domenie. 
