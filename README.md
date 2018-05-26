@@ -151,7 +151,7 @@ Rename-Computer -NewName "ad-002" -DomainCredential rem.dom.pl\Administrator -Re
 ```
 Komputer zdalny:
 ```
-PS C:\> Rename-Computer -ComputerName "Srv01" -NewName "Server001" -LocalCredential Srv01\Admin01 -DomainCredential Domain01\Admin01 -Force -PassThru -Restart
+Rename-Computer -ComputerName "Srv01" -NewName "Server001" -LocalCredential Srv01\Admin01 -DomainCredential Domain01\Admin01 -Force -PassThru -Restart
 ```
 2) Na komputerze AD-001:
 	- wyłącz pierwszy (Local Area Connection) interfejs sieciowy 
@@ -166,9 +166,9 @@ PS C:\> Rename-Computer -ComputerName "Srv01" -NewName "Server001" -LocalCredent
 	- dla drugiego interfejsu sieciowego (Local Area Connection) wyłącz protokół IPv6, oraz ustaw: 
 	
 		```
-		$2ndLAC = Get-WmiObject -Class Win32_NetworkAdapter -filter "Name LIKE '%Network Connection #2'"
-		Get-NetAdapterBinding -ComponentID ms_tcpip6
-		Enable-NetAdapterBinding -Name "Network Connection #2" -ComponentID ms_tcpip6
+		$2ndLAC = Get-WMIObject Win32_NetworkAdapterConfiguration | where{$_.IPEnabled -eq "TRUE"}
+		#Get-NetAdapterBinding -ComponentID ms_tcpip6
+		#Enable-NetAdapterBinding -Name "Network Connection #2" -ComponentID ms_tcpip6
 		```
 		
 		- adres statyczny ip4 na 192.168.20.2
@@ -191,15 +191,15 @@ PS C:\> Rename-Computer -ComputerName "Srv01" -NewName "Server001" -LocalCredent
 		
 		- adres DNS na 192.168.20.2
 		```
-		$DNSServers = "192.168.20.2","198.168.20.4"
-		$2ndLAC.SetDNSServerSearchOrder($DNSServers)
+		$DNSServer = "192.168.20.2"
+		$2ndLAC.SetDNSServerSearchOrder($DNSServer)
 		```
 		
 		https://docs.microsoft.com/en-us/powershell/module/dnsclient/set-dnsclientserveraddress?view=win10-ps
 3) Zainstaluj AD oraz DNS na komputerze AD-001 w domenie winadm.local w trybie zgodności Windows 2008 R2.
 	```
-	dcpromo
-	import-module activedirectory
+		dcpromo
+		import-module activedirectory
 	```
 
 	https://blogs.technet.microsoft.com/uktechnet/2016/06/08/setting-up-active-directory-via-powershell/
@@ -207,24 +207,65 @@ PS C:\> Rename-Computer -ComputerName "Srv01" -NewName "Server001" -LocalCredent
 	- skonfiguruj odpowiednio Forward Zone i Reversed Zone
 	
 4) Zmien nazwe komputera z maszyny wirtualnej Windows.2008.002, na Win-002
+	```
+		$compName = Get-WmiObject Win32_ComputerSystem
+		$compName.Rename("Win-002")
+		RESTART-COMPUTER -force
+	```
+
 	- wyłącz pierwszy (Local Area Connection) interfejs sieciowy 
+	```
+		$1stLAC = Get-WmiObject -Class Win32_NetworkAdapter -filter "Name LIKE '%Network Connection'"
+		$1stLAC.disable()
+	```
+	
 	- dla drugiego interfejsu sieciowego (Local Area Connection 2) wyłącz protokół IPv6, oraz ustaw :
+	```
+		$2ndLAC = Get-WMIObject Win32_NetworkAdapterConfiguration | where{$_.IPEnabled -eq "TRUE"}
+	```
 		- adres statyczny ip4 na 192.168.20.10
 		- maskę sieciową na 255.255.255.0
 		- brama 192.168.20.2
 		- adres DNS na 192.168.20.2
+		```
+			$2ndLAC.EnableStatic("192.168.20.10", "255.255.255.0")
+			$2ndLAC.SetGateways("192.168.20.2")
+			$2ndLAC.SetDNSServerSearchOrder("192.168.20.2")
+		```
 5) Podłącz komputer Win-002 do domeny
-	https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.management/add-computer?view=powershell-5.1
-	https://community.spiceworks.com/scripts/show/1540-join-computer-to-domain-with-powershell-one-click-method
+	```
+		Add-Computer -DomainName "winadm.local"
+	```
+	
 6) Utwórz użytkownika Domenowego
 	- Jan Kowalski z loginem kowalski z miasta Warszawa
 	- Tomek Nowak z działu poczta
-	
-	http://techgenix.com/creating-active-directory-accounts-using-powershell/
-	
-	https://redmondmag.com/articles/2016/08/09/create-an-active-directory-account-in-powershell.aspx
+	```
+ 		$pass = -join((65..90) + (97..122) | Get-Random -Count 8 | %{[char]$_}) +"2#"
+		$pass = zVSneits2#
+ 		$GivenName = "Jan"
+		$name = “kowalski”
+		$city = "Warszawa"
+		$surn = "Kowalski"
+ 		New-ADUser -GivenName $GivenName -name $name -City $city -Surname $surn -AccountPassword (ConvertTo-SecureString $pass -AsPlainText -Force)
+		$name = “tnowak”
+		$dep = "poczta"
+		$GivenName = "Tomek"
+		$surn = "Nowak"
+		$city = "Łódź"
+		New-ADUser -GivenName $GivenName -Name $name -City $city -Surname $surn -Department $dep -AccountPassword (ConvertTo-SecureString $pass -AsPlainText -Force)
+		
+		#Remove-ADUser -Identity tnowak
+		Get-ADUser -Filter * | Select-Object name, surname, city, Department,GivenName
+		
+	```
+
 7) Powershell:
 	- Zmień hasło użytkownika Kowalski
+	```	
+		Set-AdAccountPassword -Identity kowalski -Reset -NewPassword (ConvertTo-SecureString -AsPlainText "BNcPakYF49#" -Force)
+	```
+	
 	- Wymuś zmianę hasła użytkownika kowalski przy następnym logowaniu
 	- Wyświetl wszytkich użytkowników z miasta Warszawa
 	- Zablokuj konto użytkownika z Warszawy
