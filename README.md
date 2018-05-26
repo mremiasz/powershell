@@ -130,12 +130,12 @@ $oIE.visible = $true
 ```
 ### Druga część zaliczenia
 
-```
+```powershell
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 ```
 
 DCPROMO jest narzędziem do promowania serwera do kontrolera domeny, czyli zrobić serwer, który nie jest kontrolerem domeny:
-```
+```powershell
 dcpromo
 import-module activedirectory
 ```
@@ -143,20 +143,20 @@ import-module activedirectory
 1) Zmien nazwe komputera z maszyny wirtualnej Windows.2008.001, na AD-001
 
 Komputer lokalny:
-```
+```powershell
 $compName = Get-WmiObject Win32_ComputerSystem
 $compName.Rename("AD-001")
 RESTART-COMPUTER -force
 Rename-Computer -NewName "ad-002" -DomainCredential rem.dom.pl\Administrator -Restart
 ```
 Komputer zdalny:
-```
+```powershell
 Rename-Computer -ComputerName "Srv01" -NewName "Server001" -LocalCredential Srv01\Admin01 -DomainCredential Domain01\Admin01 -Force -PassThru -Restart
 ```
 2) Na komputerze AD-001:
 	- wyłącz pierwszy (Local Area Connection) interfejs sieciowy 
 		
-		```
+		```powershell
 		Get-NetAdapter [This cmdlet is part of the NetAdapter module that comes with Windows 8/Server 2012 and later.]
 		$1stLAC = Get-WmiObject -Class Win32_NetworkAdapter -filter "Name LIKE '%Network Connection'"
 		$1stLAC.disable()
@@ -165,7 +165,7 @@ Rename-Computer -ComputerName "Srv01" -NewName "Server001" -LocalCredential Srv0
 	
 	- dla drugiego interfejsu sieciowego (Local Area Connection) wyłącz protokół IPv6, oraz ustaw: 
 	
-		```
+		```powershell
 		$2ndLAC = Get-WMIObject Win32_NetworkAdapterConfiguration | where{$_.IPEnabled -eq "TRUE"}
 		#Get-NetAdapterBinding -ComponentID ms_tcpip6
 		#Enable-NetAdapterBinding -Name "Network Connection #2" -ComponentID ms_tcpip6
@@ -180,26 +180,25 @@ Rename-Computer -ComputerName "Srv01" -NewName "Server001" -LocalCredential Srv0
 		```
 		
 		- brama 192.168.20.2
-		```
+		```powershell
 		$2ndLAC.SetGateways("192.168.20.1")
 		```
-		
-		```
+
 		https://gist.github.com/munim/794bc70b24dd2288adb65789279ac194
-		```
 		Kalkulator: https://mxtoolbox.com/subnetcalculator.aspx
 		
 		- adres DNS na 192.168.20.2
-		```
+		
+		```powershell
 		$DNSServer = "192.168.20.2"
 		$2ndLAC.SetDNSServerSearchOrder($DNSServer)
 		```
 		
 		https://docs.microsoft.com/en-us/powershell/module/dnsclient/set-dnsclientserveraddress?view=win10-ps
 3) Zainstaluj AD oraz DNS na komputerze AD-001 w domenie winadm.local w trybie zgodności Windows 2008 R2.
-	```
-		dcpromo
-		import-module activedirectory
+	```powershell
+	dcpromo
+	import-module activedirectory
 	```
 
 	https://blogs.technet.microsoft.com/uktechnet/2016/06/08/setting-up-active-directory-via-powershell/
@@ -255,6 +254,14 @@ Rename-Computer -ComputerName "Srv01" -NewName "Server001" -LocalCredential Srv0
 	$city = "Łódź"
 	New-ADUser -GivenName $GivenName -Name $name -City $city -Surname $surn -Department $dep -AccountPassword (ConvertTo-SecureString $pass -AsPlainText -Force)
 	
+	$name = “remek”
+	$dep = "magazyn"
+	$GivenName = "Tomek"
+	$surn = "Nowak"
+	$pass = "zVSneits2#"
+	$city = "Łódź"
+	New-ADUser -GivenName $GivenName -Name $name -City $city -Surname $surn -Department $dep -AccountPassword (ConvertTo-SecureString $pass -AsPlainText -Force)
+	
 	#Remove-ADUser -Identity tnowak
 	Get-ADUser -Filter * | Select-Object name, surname, city, Department,GivenName
 	```
@@ -286,14 +293,15 @@ Rename-Computer -ComputerName "Srv01" -NewName "Server001" -LocalCredential Srv0
 	```
 	- Wyświetl informację o ostatnim logowaniu na danym komputerze
 	```powershell
-	Get-ADUser -Filter * -Properties * | 
-	Select-Object -Property Name, @{Name="Total failed logons";Expression="msDS-FailedInteractiveLogonCount"}, 
-	@{Name="Recent failed logons";Expression="msDS-FailedInteractiveLogonCountAtLastSuccessfulLogon"}, 
-	@{"Name"="Last failed logon";Expression={[datetime]::FromFileTime($_.'msDS-LastFailedInteractiveLogonTime')}}, 
-	@{"Name"="Last successful logon";Expression={[datetime]::FromFileTime($_.'msDS-LastSuccessfulInteractiveLogonTime')}} | 
-	Sort-Object Name | Format-Table
+	Get-ADUser -Filter * -Properties LastLogonDate | Select-Object SamAccountName,LastLogonDate
 	```
 	
 	- Wyświetl informację o systemach operacyjnych na komputerach w domenie
+	```powershell
+	Get-Adcomputer -filter * | select-object Name
+	```
 8) Zmień GPO, tak aby przy logowaniu użytkownik nie widział opcji RUN w start menu
+
+User Configuration\Policies\Administrative Templates\Start Menu and Taskbar\Remove Run menu from Start Menu
+
 9) Znajdź wersję instalacyjną msi programu firefox i utwórz politykę zmuszającą do zainstalowania tego oprogramownia w czasie startu systemu na komputerach w domenie. 
